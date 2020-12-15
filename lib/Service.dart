@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'HomeTask.dart';
 import 'Pupil.dart';
 import 'PupilSolution.dart';
+import 'School.dart';
 
 final String nodeEndPoint = 'http://62.109.10.134:6613';
 //final String nodeEndPoint = 'http://192.168.1.15:6613';
@@ -292,6 +293,39 @@ Future<String> getTasksStatus(List <String> tasksIdToCheck, Pupil pupil) async {
   //{"err":null,"arTaskStatus":[{"taskId":"5fa2b6d28f202d2bd08ef266","status":"-"}]}
 }
 
+Future<List <School>> getSchools(String cityName) async {
+  print('send req to '+nodeEndPoint+'/getSchools');
+  var value = await http.post(nodeEndPoint+'/getSchools',
+      headers: <String, String>{ 'Content-Type': 'application/json; charset=UTF-8', },
+      body: jsonEncode(
+          <String, dynamic>{
+            'city': cityName,
+          })
+  );
+  if (value.body == null) {
+    print('some err at get schools cb( No body');
+    return [];
+  }
+  var res;
+  try {
+    res = jsonDecode(value.body);
+    if (res["err"] != null) {
+      print('some err on server side on schools get');
+      return [];
+    }
+  } catch (e) {
+    print('some err on parse server\'s response on schools get');
+    return [];
+  }
+  print('got decoded ar schools ${res["ar"]}');
+  List <School> schools = [];
+  res["ar"].forEach((el) {
+    print('add $el');
+    schools.add(School(el["_id"], el["school"], cityName));
+  });
+  return schools;
+}
+
 Map <String, List<String>> msgs = {
   'Идентификация':  ['Идентификация','Ідентифікація'],
   'Твой город': ['Твой город','Твоє місто'],
@@ -316,4 +350,5 @@ Map <String, List<String>> msgs = {
   'на проверке': ['на проверке','на перевірці'],
   'оценка': ['оценка','оцінка'],
   'Настройки': ['Настройки','Налаштування'],
+  'Или выберите школу из списка:': ['Или выберите школу из списка:','Або виберіть школу зі списку:'],
 };
